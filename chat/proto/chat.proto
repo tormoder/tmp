@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package proto;
+
+service UserService {
+	rpc Login(LoginRequest) returns (Credentials) {}
+	rpc Logout(Credentials) returns (LogoutResponse) {}
+	rpc ListUsers(Credentials) returns (ListUsersResponse) {}
+}
+
+message LoginRequest {
+	string nick = 1;
+}
+
+message LogoutResponse{}
+
+message User {
+	string nick 		= 1;
+	int64 time_last_seen 	= 3;
+}
+
+message Credentials {
+	string nick = 1;
+	bytes token = 2;
+}
+
+message ListUsersResponse {
+	repeated User users = 1;
+}
+
+
+service ChatService {
+	rpc SendPrivate(PrivateMsgRequest) returns (SendMsgResponse) {}
+	rpc SendPublic(PublicMsgRequest) returns (SendMsgResponse) {}
+	rpc ListenForMessages(Credentials) returns (stream ChatServerMsg) {}
+}
+
+message PrivateMsgRequest{
+	Credentials creds 	= 1;
+	string to 		= 2;
+	string msg		= 3;
+}
+
+message PublicMsgRequest {
+	Credentials creds 	= 1;
+	string msg		= 2;
+}
+
+message SendMsgResponse{}
+
+message ChatServerMsg {
+	oneof msg {
+		PublicMsg public_msg 	= 1;
+		PrivateMsg private_msg 	= 2;
+		UserEvent user_event 	= 3;
+		Heartbeat heartbeat	= 4;
+	}
+}
+
+message PrivateMsg {
+	string to 	= 1;
+	User from 	= 2; 
+	string msg 	= 3;
+	int64 time_sent	= 4;
+}
+
+message PublicMsg {
+	User from 	= 1; 
+	string msg 	= 2;
+	int64 time_sent = 3;
+}
+
+message UserEvent {
+	enum EventType {
+		UNKNOWN = 0;
+		LOGIN	= 1;
+		LOGOUT	= 2;
+	}
+	EventType event = 1;
+	User user	= 2; 
+	int64 time	= 3;
+}
+
+message Heartbeat{}
